@@ -22,7 +22,9 @@ var Engine = (function(global) {
         win = global.window,
         canvas = doc.createElement('canvas'),
         ctx = canvas.getContext('2d'),
-        lastTime;
+        lastTime,
+        collisionOccurred = false,
+        rAfId;
 
     canvas.width = 505;
     canvas.height = 606;
@@ -45,6 +47,10 @@ var Engine = (function(global) {
          * our update function since it may be used for smooth animation.
          */
         update(dt);
+        if (collisionOccurred) {
+            win.cancelAnimationFrame(rAfId);
+            return;
+        }
         render();
 
         /* Set our lastTime variable which is used to determine the time delta
@@ -79,7 +85,36 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        if (checkCollisions()) {
+            collisionOccurred = true;
+            if (win.confirm('Collision occurred! do you wanna start again?')) {
+                reset();
+                collisionOccurred = false;
+            }
+        }
+    }
+
+    function checkCollisions()
+    {
+        allEnemies.forEach(function(enemy) {
+            if(xBetween(enemy.x,player.x-20,player.x+40) && xBetween(enemy.y,player.y-20,player.y+40)) {
+                collisionOccurred = true;
+                if (win.confirm('Collision occurred! do you wanna start again?')) {
+                    reset();
+                    collisionOccurred = false;
+                }
+                reset();
+            }
+        });
+    }
+
+    function xBetween(x,a,b){
+        if(x>a && x<b) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     /* This is called by the update function and loops through all of the
@@ -161,7 +196,12 @@ var Engine = (function(global) {
      * those sorts of things. It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        player = new Player();
+        allEnemies = [];
+        index = 2;
+        allEnemies[0] = new Enemy(-100,60);
+        allEnemies[1] = new Enemy(-250,145);
+        allEnemies[2] = new Enemy(-400, 230);
     }
 
     /* Go ahead and load all of the images we know we're going to need to

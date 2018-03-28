@@ -1,39 +1,112 @@
-// Enemies our player must avoid
-var Enemy = function() {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
-
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
-    this.sprite = 'images/enemy-bug.png';
+var baseObj = function(x, y, img) {
+    this.sprite = img;
+    this.x = x;
+    this.y = y;
 };
 
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+var Enemy = function(x, y) {
+    baseObj.call(this, x, y, 'images/enemy-bug.png');
+    this.constructor = Enemy;
+
+    this.speedMod = getRandomInt(1,4);
+
+    var ts = Math.round((new Date()).getTime() / 1000);
+    this.friend = ts + getRandomInt(1,5);
+};
+
+
 Enemy.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
+    this.x += (90*dt)+this.speedMod;
+
+    var ts = Math.round((new Date()).getTime() / 1000);
+    if(this.friend === ts) {
+        var randy = getRandomInt(0,3);
+        var randx = getRandomInt(1,2) * -100;
+
+        allEnemies[index] = new Enemy(randx,validRows[randy]);
+        index++;
+        this.friend = 0;
+    }
+
+    if(index === 14) {
+        index = 0;
+    }
+
 };
 
-// Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
+var Player = function(x, y) {
+    baseObj.call(this, 200, 400, 'images/char-boy.png');
+    this.constructor = Player;
 
+    this.moveX = 0;
+    this.moveY = 0;
 
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
+    this.speed = 5;
+}
 
+Player.prototype.handleInput = function(key) {
+    if(this.moveX !== 0 || this.moveY !== 0) {
+        return;
+    }
 
+    if(this.x>300 && key === 'right') {
+        return;
+    }
+    if(this.x<100 && key === 'left') {
+        return;
+    }
+    if(this.y<100 && key === 'up') {
+        return;
+    }
+    if(this.y>359 && key === 'down') {
+        return;
+    }
 
-// This listens for key presses and sends the keys to your
-// Player.handleInput() method. You don't need to modify this.
+    if(key === 'up') {
+        this.moveY -= 85;
+    }
+    if(key === 'down') {
+        this.moveY += 85;
+    }
+    if(key === 'left') {
+        this.moveX -= 100;
+    }
+    if(key === 'right') {
+        this.moveX += 100;
+    }
+};
+
+Player.prototype.update = function(dt) {
+    if(this.moveX > 0) {
+        this.x += this.speed;
+        this.moveX -= this.speed;
+    }
+    if(this.moveX < 0) {
+        this.x -= this.speed;
+        this.moveX += this.speed;
+    }
+    if(this.moveY > 0) {
+        this.y += this.speed;
+        this.moveY -= this.speed;
+    }
+    if(this.moveY < 0) {
+        this.y -= this.speed;
+        this.moveY += this.speed;
+    }
+};
+
+Player.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
 document.addEventListener('keyup', function(e) {
     var allowedKeys = {
         37: 'left',
@@ -43,4 +116,19 @@ document.addEventListener('keyup', function(e) {
     };
 
     player.handleInput(allowedKeys[e.keyCode]);
+    e.preventDefault();
+    return false;
 });
+
+
+var player = new Player();
+
+var allEnemies = [];
+
+var index = 2;
+
+var validRows = [60,145,230];
+
+allEnemies[0] = new Enemy(-100,validRows[0]);
+allEnemies[1] = new Enemy(-250,validRows[1]);
+allEnemies[2] = new Enemy(-400,validRows[2]);
